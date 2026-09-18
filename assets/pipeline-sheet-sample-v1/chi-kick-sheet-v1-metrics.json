@@ -1,0 +1,151 @@
+{
+  "format": "RGBA8888 frame-major raw bytes",
+  "canvas": [
+    80,
+    96
+  ],
+  "frame_count": 6,
+  "scale": 0.17279411764705882,
+  "baseline": 95,
+  "raw_bytes": 184320,
+  "frames": [
+    {
+      "index": 0,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/chi-kick-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        11,
+        98,
+        320,
+        635
+      ],
+      "normalized_bbox": [
+        13,
+        3,
+        66,
+        96
+      ],
+      "opaque_or_partial_pixels": 3322,
+      "contact_row": 95,
+      "source_component_pixels": 102409
+    },
+    {
+      "index": 1,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/chi-kick-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        360,
+        98,
+        664,
+        638
+      ],
+      "normalized_bbox": [
+        13,
+        3,
+        66,
+        96
+      ],
+      "opaque_or_partial_pixels": 3121,
+      "contact_row": 95,
+      "source_component_pixels": 96773
+    },
+    {
+      "index": 2,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/chi-kick-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        713,
+        98,
+        1080,
+        642
+      ],
+      "normalized_bbox": [
+        8,
+        2,
+        71,
+        96
+      ],
+      "opaque_or_partial_pixels": 3309,
+      "contact_row": 95,
+      "source_component_pixels": 102286
+    },
+    {
+      "index": 3,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/chi-kick-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1080,
+        96,
+        1496,
+        638
+      ],
+      "normalized_bbox": [
+        4,
+        2,
+        76,
+        96
+      ],
+      "opaque_or_partial_pixels": 3510,
+      "contact_row": 95,
+      "source_component_pixels": 106865
+    },
+    {
+      "index": 4,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/chi-kick-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1491,
+        98,
+        1802,
+        642
+      ],
+      "normalized_bbox": [
+        13,
+        2,
+        67,
+        96
+      ],
+      "opaque_or_partial_pixels": 3097,
+      "contact_row": 95,
+      "source_component_pixels": 95917
+    },
+    {
+      "index": 5,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/chi-kick-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1848,
+        97,
+        2151,
+        637
+      ],
+      "normalized_bbox": [
+        14,
+        3,
+        66,
+        96
+      ],
+      "opaque_or_partial_pixels": 3288,
+      "contact_row": 95,
+      "source_component_pixels": 101964
+    }
+  ]
+}

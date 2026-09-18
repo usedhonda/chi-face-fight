@@ -1,0 +1,151 @@
+{
+  "format": "RGBA8888 frame-major raw bytes",
+  "canvas": [
+    80,
+    96
+  ],
+  "frame_count": 6,
+  "scale": 0.1705989110707804,
+  "baseline": 95,
+  "raw_bytes": 184320,
+  "frames": [
+    {
+      "index": 0,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-punch-combo-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        9,
+        93,
+        323,
+        644
+      ],
+      "normalized_bbox": [
+        13,
+        2,
+        67,
+        96
+      ],
+      "opaque_or_partial_pixels": 3475,
+      "contact_row": 95,
+      "source_component_pixels": 108498
+    },
+    {
+      "index": 1,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-punch-combo-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        357,
+        94,
+        734,
+        644
+      ],
+      "normalized_bbox": [
+        8,
+        2,
+        72,
+        96
+      ],
+      "opaque_or_partial_pixels": 3656,
+      "contact_row": 95,
+      "source_component_pixels": 114604
+    },
+    {
+      "index": 2,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-punch-combo-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        727,
+        95,
+        1042,
+        644
+      ],
+      "normalized_bbox": [
+        13,
+        2,
+        67,
+        96
+      ],
+      "opaque_or_partial_pixels": 3498,
+      "contact_row": 95,
+      "source_component_pixels": 109481
+    },
+    {
+      "index": 3,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-punch-combo-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1097,
+        94,
+        1464,
+        643
+      ],
+      "normalized_bbox": [
+        8,
+        2,
+        71,
+        96
+      ],
+      "opaque_or_partial_pixels": 3605,
+      "contact_row": 95,
+      "source_component_pixels": 111783
+    },
+    {
+      "index": 4,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-punch-combo-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1486,
+        95,
+        1802,
+        644
+      ],
+      "normalized_bbox": [
+        13,
+        2,
+        67,
+        96
+      ],
+      "opaque_or_partial_pixels": 3485,
+      "contact_row": 95,
+      "source_component_pixels": 109355
+    },
+    {
+      "index": 5,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-punch-combo-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1845,
+        95,
+        2156,
+        644
+      ],
+      "normalized_bbox": [
+        13,
+        2,
+        66,
+        96
+      ],
+      "opaque_or_partial_pixels": 3444,
+      "contact_row": 95,
+      "source_component_pixels": 108509
+    }
+  ]
+}

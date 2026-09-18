@@ -1,0 +1,7 @@
+.pio/
+sdkconfig*
+!sdkconfig.defaults
+.DS_Store
+logs/
+docs/log/
+managed_components

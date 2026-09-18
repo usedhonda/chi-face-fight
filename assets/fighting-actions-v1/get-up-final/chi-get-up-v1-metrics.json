@@ -1,0 +1,128 @@
+{
+  "format": "RGBA8888 frame-major raw bytes",
+  "canvas": [
+    80,
+    96
+  ],
+  "frame_count": 5,
+  "scale": 0.15702479338842976,
+  "baseline": 95,
+  "raw_bytes": 153600,
+  "frames": [
+    {
+      "index": 0,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-get-up-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        39,
+        385,
+        523,
+        660
+      ],
+      "normalized_bbox": [
+        2,
+        53,
+        78,
+        96
+      ],
+      "opaque_or_partial_pixels": 2420,
+      "contact_row": 95,
+      "source_component_pixels": 90689
+    },
+    {
+      "index": 1,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-get-up-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        492,
+        251,
+        949,
+        657
+      ],
+      "normalized_bbox": [
+        4,
+        32,
+        76,
+        96
+      ],
+      "opaque_or_partial_pixels": 3217,
+      "contact_row": 95,
+      "source_component_pixels": 115851
+    },
+    {
+      "index": 2,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-get-up-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        963,
+        166,
+        1306,
+        656
+      ],
+      "normalized_bbox": [
+        13,
+        19,
+        67,
+        96
+      ],
+      "opaque_or_partial_pixels": 3146,
+      "contact_row": 95,
+      "source_component_pixels": 114956
+    },
+    {
+      "index": 3,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-get-up-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1379,
+        199,
+        1756,
+        663
+      ],
+      "normalized_bbox": [
+        10,
+        23,
+        69,
+        96
+      ],
+      "opaque_or_partial_pixels": 3191,
+      "contact_row": 95,
+      "source_component_pixels": 116043
+    },
+    {
+      "index": 4,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-get-up-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1778,
+        66,
+        2133,
+        654
+      ],
+      "normalized_bbox": [
+        12,
+        4,
+        68,
+        96
+      ],
+      "opaque_or_partial_pixels": 3694,
+      "contact_row": 95,
+      "source_component_pixels": 132560
+    }
+  ]
+}

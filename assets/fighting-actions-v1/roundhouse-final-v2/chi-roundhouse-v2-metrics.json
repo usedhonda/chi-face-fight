@@ -1,0 +1,151 @@
+{
+  "format": "RGBA8888 frame-major raw bytes",
+  "canvas": [
+    80,
+    96
+  ],
+  "frame_count": 6,
+  "scale": 0.15833333333333333,
+  "baseline": 95,
+  "raw_bytes": 184320,
+  "frames": [
+    {
+      "index": 0,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-roundhouse-sheet-v1.png",
+      "source_size": [
+        2057,
+        764
+      ],
+      "source_bbox": [
+        14,
+        136,
+        300,
+        661
+      ],
+      "normalized_bbox": [
+        17,
+        13,
+        62,
+        96
+      ],
+      "opaque_or_partial_pixels": 2699,
+      "contact_row": 95,
+      "source_component_pixels": 94304
+    },
+    {
+      "index": 1,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-roundhouse-sheet-v1.png",
+      "source_size": [
+        2057,
+        764
+      ],
+      "source_bbox": [
+        315,
+        137,
+        633,
+        661
+      ],
+      "normalized_bbox": [
+        15,
+        13,
+        65,
+        96
+      ],
+      "opaque_or_partial_pixels": 2850,
+      "contact_row": 95,
+      "source_component_pixels": 98977
+    },
+    {
+      "index": 2,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-roundhouse-sheet-v1.png",
+      "source_size": [
+        2057,
+        764
+      ],
+      "source_bbox": [
+        644,
+        132,
+        951,
+        664
+      ],
+      "normalized_bbox": [
+        15,
+        12,
+        64,
+        96
+      ],
+      "opaque_or_partial_pixels": 2713,
+      "contact_row": 95,
+      "source_component_pixels": 94796
+    },
+    {
+      "index": 3,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-roundhouse-sheet-v1.png",
+      "source_size": [
+        2057,
+        764
+      ],
+      "source_bbox": [
+        962,
+        139,
+        1442,
+        665
+      ],
+      "normalized_bbox": [
+        2,
+        13,
+        78,
+        96
+      ],
+      "opaque_or_partial_pixels": 2898,
+      "contact_row": 95,
+      "source_component_pixels": 99234
+    },
+    {
+      "index": 4,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-roundhouse-sheet-v1.png",
+      "source_size": [
+        2057,
+        764
+      ],
+      "source_bbox": [
+        1405,
+        137,
+        1720,
+        661
+      ],
+      "normalized_bbox": [
+        15,
+        13,
+        65,
+        96
+      ],
+      "opaque_or_partial_pixels": 2551,
+      "contact_row": 95,
+      "source_component_pixels": 89207
+    },
+    {
+      "index": 5,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-roundhouse-sheet-v1.png",
+      "source_size": [
+        2057,
+        764
+      ],
+      "source_bbox": [
+        1753,
+        137,
+        2038,
+        661
+      ],
+      "normalized_bbox": [
+        17,
+        13,
+        62,
+        96
+      ],
+      "opaque_or_partial_pixels": 2694,
+      "contact_row": 95,
+      "source_component_pixels": 93848
+    }
+  ]
+}

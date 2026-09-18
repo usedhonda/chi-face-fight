@@ -1,0 +1,145 @@
+{
+  "format": "RGBA8888 frame-major raw bytes",
+  "canvas": [
+    80,
+    96
+  ],
+  "frame_count": 6,
+  "scale": 0.14285714285714285,
+  "baseline": 95,
+  "raw_bytes": 184320,
+  "frames": [
+    {
+      "index": 0,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/kick-source/frame-00.png",
+      "source_size": [
+        362,
+        724
+      ],
+      "source_bbox": [
+        11,
+        37,
+        362,
+        636
+      ],
+      "normalized_bbox": [
+        15,
+        17,
+        60,
+        96
+      ],
+      "opaque_or_partial_pixels": 2371,
+      "contact_row": 95
+    },
+    {
+      "index": 1,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/kick-source/frame-01.png",
+      "source_size": [
+        362,
+        724
+      ],
+      "source_bbox": [
+        0,
+        98,
+        362,
+        702
+      ],
+      "normalized_bbox": [
+        14,
+        10,
+        66,
+        89
+      ],
+      "opaque_or_partial_pixels": 2224,
+      "contact_row": 88
+    },
+    {
+      "index": 2,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/kick-source/frame-02.png",
+      "source_size": [
+        362,
+        724
+      ],
+      "source_bbox": [
+        0,
+        77,
+        362,
+        696
+      ],
+      "normalized_bbox": [
+        14,
+        9,
+        66,
+        90
+      ],
+      "opaque_or_partial_pixels": 2346,
+      "contact_row": 89
+    },
+    {
+      "index": 3,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/kick-source/frame-03.png",
+      "source_size": [
+        362,
+        724
+      ],
+      "source_bbox": [
+        0,
+        27,
+        362,
+        685
+      ],
+      "normalized_bbox": [
+        14,
+        10,
+        66,
+        91
+      ],
+      "opaque_or_partial_pixels": 2403,
+      "contact_row": 90
+    },
+    {
+      "index": 4,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/kick-source/frame-04.png",
+      "source_size": [
+        362,
+        724
+      ],
+      "source_bbox": [
+        0,
+        98,
+        356,
+        662
+      ],
+      "normalized_bbox": [
+        14,
+        15,
+        65,
+        94
+      ],
+      "opaque_or_partial_pixels": 2258,
+      "contact_row": 93
+    },
+    {
+      "index": 5,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/kick-source/frame-05.png",
+      "source_size": [
+        362,
+        724
+      ],
+      "source_bbox": [
+        33,
+        97,
+        341,
+        684
+      ],
+      "normalized_bbox": [
+        18,
+        12,
+        62,
+        91
+      ],
+      "opaque_or_partial_pixels": 2334,
+      "contact_row": 90
+    }
+  ]
+}

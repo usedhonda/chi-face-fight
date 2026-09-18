@@ -1,0 +1,105 @@
+{
+  "format": "RGBA8888 frame-major raw bytes",
+  "canvas": [
+    80,
+    96
+  ],
+  "frame_count": 4,
+  "scale": 0.14587332053742802,
+  "baseline": 95,
+  "raw_bytes": 122880,
+  "frames": [
+    {
+      "index": 0,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-dodge-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        84,
+        85,
+        422,
+        671
+      ],
+      "normalized_bbox": [
+        15,
+        11,
+        64,
+        96
+      ],
+      "opaque_or_partial_pixels": 2931,
+      "contact_row": 95,
+      "source_component_pixels": 126489
+    },
+    {
+      "index": 1,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-dodge-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        576,
+        153,
+        1004,
+        670
+      ],
+      "normalized_bbox": [
+        9,
+        21,
+        71,
+        96
+      ],
+      "opaque_or_partial_pixels": 2959,
+      "contact_row": 95,
+      "source_component_pixels": 128294
+    },
+    {
+      "index": 2,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-dodge-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1055,
+        154,
+        1576,
+        668
+      ],
+      "normalized_bbox": [
+        2,
+        21,
+        78,
+        96
+      ],
+      "opaque_or_partial_pixels": 3412,
+      "contact_row": 95,
+      "source_component_pixels": 145242
+    },
+    {
+      "index": 3,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-dodge-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1741,
+        84,
+        2079,
+        670
+      ],
+      "normalized_bbox": [
+        15,
+        11,
+        64,
+        96
+      ],
+      "opaque_or_partial_pixels": 2937,
+      "contact_row": 95,
+      "source_component_pixels": 126263
+    }
+  ]
+}

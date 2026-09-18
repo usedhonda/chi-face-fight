@@ -1,0 +1,101 @@
+{
+  "format": "RGBA8888 frame-major raw bytes",
+  "canvas": [
+    80,
+    96
+  ],
+  "frame_count": 4,
+  "scale": 0.14339622641509434,
+  "baseline": 95,
+  "raw_bytes": 122880,
+  "frames": [
+    {
+      "index": 0,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/hit-source/frame-00.png",
+      "source_size": [
+        543,
+        724
+      ],
+      "source_bbox": [
+        61,
+        19,
+        535,
+        659
+      ],
+      "normalized_bbox": [
+        6,
+        7,
+        64,
+        96
+      ],
+      "opaque_or_partial_pixels": 2933,
+      "contact_row": 95
+    },
+    {
+      "index": 1,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/hit-source/frame-01.png",
+      "source_size": [
+        543,
+        724
+      ],
+      "source_bbox": [
+        10,
+        78,
+        469,
+        658
+      ],
+      "normalized_bbox": [
+        7,
+        13,
+        71,
+        96
+      ],
+      "opaque_or_partial_pixels": 3090,
+      "contact_row": 95
+    },
+    {
+      "index": 2,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/hit-source/frame-02.png",
+      "source_size": [
+        543,
+        724
+      ],
+      "source_bbox": [
+        9,
+        79,
+        539,
+        660
+      ],
+      "normalized_bbox": [
+        2,
+        13,
+        77,
+        96
+      ],
+      "opaque_or_partial_pixels": 3284,
+      "contact_row": 95
+    },
+    {
+      "index": 3,
+      "source": "work/chi-camera-creature/assets/game-actions-v1/hit-source/frame-03.png",
+      "source_size": [
+        543,
+        724
+      ],
+      "source_bbox": [
+        37,
+        63,
+        515,
+        660
+      ],
+      "normalized_bbox": [
+        14,
+        10,
+        68,
+        95
+      ],
+      "opaque_or_partial_pixels": 2951,
+      "contact_row": 94
+    }
+  ]
+}

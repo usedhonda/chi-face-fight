@@ -1,0 +1,151 @@
+{
+  "format": "RGBA8888 frame-major raw bytes",
+  "canvas": [
+    80,
+    96
+  ],
+  "frame_count": 6,
+  "scale": 0.18491484184914841,
+  "baseline": 95,
+  "raw_bytes": 184320,
+  "frames": [
+    {
+      "index": 0,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-knockdown-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        18,
+        153,
+        300,
+        631
+      ],
+      "normalized_bbox": [
+        14,
+        8,
+        66,
+        96
+      ],
+      "opaque_or_partial_pixels": 3265,
+      "contact_row": 95,
+      "source_component_pixels": 85190
+    },
+    {
+      "index": 1,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-knockdown-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        319,
+        154,
+        729,
+        632
+      ],
+      "normalized_bbox": [
+        2,
+        8,
+        78,
+        96
+      ],
+      "opaque_or_partial_pixels": 3624,
+      "contact_row": 95,
+      "source_component_pixels": 93810
+    },
+    {
+      "index": 2,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-knockdown-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        665,
+        153,
+        1076,
+        630
+      ],
+      "normalized_bbox": [
+        2,
+        8,
+        78,
+        96
+      ],
+      "opaque_or_partial_pixels": 3760,
+      "contact_row": 95,
+      "source_component_pixels": 96053
+    },
+    {
+      "index": 3,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-knockdown-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1038,
+        226,
+        1421,
+        631
+      ],
+      "normalized_bbox": [
+        4,
+        21,
+        75,
+        96
+      ],
+      "opaque_or_partial_pixels": 3628,
+      "contact_row": 95,
+      "source_component_pixels": 92833
+    },
+    {
+      "index": 4,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-knockdown-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1408,
+        267,
+        1752,
+        629
+      ],
+      "normalized_bbox": [
+        8,
+        29,
+        72,
+        96
+      ],
+      "opaque_or_partial_pixels": 3115,
+      "contact_row": 95,
+      "source_component_pixels": 81772
+    },
+    {
+      "index": 5,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-knockdown-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1757,
+        412,
+        2151,
+        633
+      ],
+      "normalized_bbox": [
+        3,
+        55,
+        76,
+        96
+      ],
+      "opaque_or_partial_pixels": 2307,
+      "contact_row": 95,
+      "source_component_pixels": 61865
+    }
+  ]
+}

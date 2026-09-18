@@ -1,0 +1,105 @@
+{
+  "format": "RGBA8888 frame-major raw bytes",
+  "canvas": [
+    80,
+    96
+  ],
+  "frame_count": 4,
+  "scale": 0.1412639405204461,
+  "baseline": 95,
+  "raw_bytes": 122880,
+  "frames": [
+    {
+      "index": 0,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-defeat-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        34,
+        136,
+        416,
+        654
+      ],
+      "normalized_bbox": [
+        13,
+        23,
+        67,
+        96
+      ],
+      "opaque_or_partial_pixels": 2960,
+      "contact_row": 95,
+      "source_component_pixels": 133287
+    },
+    {
+      "index": 1,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-defeat-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        510,
+        128,
+        974,
+        660
+      ],
+      "normalized_bbox": [
+        7,
+        21,
+        73,
+        96
+      ],
+      "opaque_or_partial_pixels": 3404,
+      "contact_row": 95,
+      "source_component_pixels": 150259
+    },
+    {
+      "index": 2,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-defeat-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1011,
+        322,
+        1540,
+        641
+      ],
+      "normalized_bbox": [
+        2,
+        51,
+        77,
+        96
+      ],
+      "opaque_or_partial_pixels": 2559,
+      "contact_row": 95,
+      "source_component_pixels": 117059
+    },
+    {
+      "index": 3,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-defeat-sheet-v1.png",
+      "source_size": [
+        2172,
+        724
+      ],
+      "source_bbox": [
+        1609,
+        363,
+        2147,
+        645
+      ],
+      "normalized_bbox": [
+        2,
+        56,
+        78,
+        96
+      ],
+      "opaque_or_partial_pixels": 2363,
+      "contact_row": 95,
+      "source_component_pixels": 108151
+    }
+  ]
+}

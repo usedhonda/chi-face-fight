@@ -1,0 +1,128 @@
+{
+  "format": "RGBA8888 frame-major raw bytes",
+  "canvas": [
+    80,
+    96
+  ],
+  "frame_count": 5,
+  "scale": 0.16291161178509533,
+  "baseline": 95,
+  "raw_bytes": 153600,
+  "frames": [
+    {
+      "index": 0,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-jump-sheet-v1.png",
+      "source_size": [
+        2175,
+        723
+      ],
+      "source_bbox": [
+        40,
+        123,
+        387,
+        692
+      ],
+      "normalized_bbox": [
+        11,
+        3,
+        68,
+        96
+      ],
+      "opaque_or_partial_pixels": 3723,
+      "contact_row": 95,
+      "source_component_pixels": 127361
+    },
+    {
+      "index": 1,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-jump-sheet-v1.png",
+      "source_size": [
+        2175,
+        723
+      ],
+      "source_bbox": [
+        480,
+        198,
+        836,
+        692
+      ],
+      "normalized_bbox": [
+        11,
+        16,
+        69,
+        96
+      ],
+      "opaque_or_partial_pixels": 3316,
+      "contact_row": 95,
+      "source_component_pixels": 116548
+    },
+    {
+      "index": 2,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-jump-sheet-v1.png",
+      "source_size": [
+        2175,
+        723
+      ],
+      "source_bbox": [
+        898,
+        78,
+        1262,
+        655
+      ],
+      "normalized_bbox": [
+        10,
+        2,
+        69,
+        96
+      ],
+      "opaque_or_partial_pixels": 3718,
+      "contact_row": 95,
+      "source_component_pixels": 129227
+    },
+    {
+      "index": 3,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-jump-sheet-v1.png",
+      "source_size": [
+        2175,
+        723
+      ],
+      "source_bbox": [
+        1320,
+        38,
+        1726,
+        580
+      ],
+      "normalized_bbox": [
+        7,
+        8,
+        73,
+        96
+      ],
+      "opaque_or_partial_pixels": 3694,
+      "contact_row": 95,
+      "source_component_pixels": 129332
+    },
+    {
+      "index": 4,
+      "source": "work/chi-camera-creature/assets/fighting-actions-v1/sheets/chi-jump-sheet-v1.png",
+      "source_size": [
+        2175,
+        723
+      ],
+      "source_bbox": [
+        1787,
+        197,
+        2142,
+        692
+      ],
+      "normalized_bbox": [
+        11,
+        15,
+        69,
+        96
+      ],
+      "opaque_or_partial_pixels": 3359,
+      "contact_row": 95,
+      "source_component_pixels": 116471
+    }
+  ]
+}
