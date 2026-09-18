@@ -93,7 +93,7 @@ constexpr int kInferenceEvery = 3;
 constexpr int64_t kPresenceHoldUs = 600000;
 constexpr int64_t kActionDurationUs = 2000000;
 constexpr int64_t kTouchOverrideUs = 3500000;
-constexpr int64_t kKickFrameUs = 100000;
+constexpr int64_t kKickFrameUs = 135000;
 constexpr int64_t kHitFrameUs = 125000;
 constexpr int64_t kVictoryFrameUs = 160000;
 constexpr int64_t kDefeatHoldUs = 1000000;
@@ -204,6 +204,7 @@ int arena_index = 0;
 int fight_level = 1;
 bool boss_warning_feint = false;
 bool boss_body_attack = false;
+bool pending_chi_victory = false;
 CombatMotion combat_motion = CombatMotion::Home;
 int queued_attacks = 0;
 int64_t last_combat_motion_us = 0;
@@ -347,6 +348,32 @@ void draw_centered_rgba(const uint8_t *pixels, int width, int height, int y) {
   draw_rgba_image(pixels, width, height, (kDisplayWidth - width) / 2, y);
 }
 
+void draw_centered_scaled_rgba(const uint8_t *pixels, int width, int height,
+                               int output_width, int output_height, int y) {
+  const int start_x = (kDisplayWidth - output_width) / 2;
+  for (int dy = 0; dy < output_height; ++dy) {
+    const int screen_y = y + dy;
+    if (screen_y < 0 || screen_y >= kDisplayHeight) continue;
+    const int source_y = dy * height / output_height;
+    for (int dx = 0; dx < output_width; ++dx) {
+      const int screen_x = start_x + dx;
+      if (screen_x < 0 || screen_x >= kDisplayWidth) continue;
+      const int source_x = dx * width / output_width;
+      const size_t offset =
+          (static_cast<size_t>(source_y) * width + source_x) * 4;
+      const uint8_t alpha = pixels[offset + 3];
+      if (alpha < 16) continue;
+      const uint16_t color = rgb565(pixels[offset], pixels[offset + 1],
+                                    pixels[offset + 2]);
+      const size_t destination =
+          static_cast<size_t>(screen_y) * kDisplayWidth + screen_x;
+      screen[destination] = alpha > 245
+                                ? color
+                                : blend565(color, screen[destination], alpha);
+    }
+  }
+}
+
 void draw_disc(int cx, int cy, int radius, uint16_t color) {
   for (int y = -radius; y <= radius; ++y) {
     const int half = static_cast<int>(std::sqrt(radius * radius - y * y));
@@ -430,19 +457,37 @@ void draw_face_portrait(int64_t now) {
   if (now - last_attack_us < 180000) {
     shake_x = static_cast<int>((now / 30000) % 3) * 3 - 3;
   }
-  // The boss visibly patrols instead of looking like a pinned portrait.
-  const float speed = 1.0f + std::min(fight_level - 1, 8) * 0.18f;
-  const int travel_x = 16 + std::min(fight_level - 1, 8) * 5;
-  const int travel_y = 10 + std::min(fight_level - 1, 8) * 3;
-  boss_draw_x = kFaceX + static_cast<int>(std::sin(now / (680000.0 / speed)) * travel_x);
-  boss_draw_y = kFaceY + static_cast<int>(std::sin(now / (410000.0 / speed)) * travel_y);
+  // Layered patrol waves keep the target readable at level 1, then make its
+  // direction changes faster and less predictable each round.
+  const int difficulty = std::min(fight_level - 1, 8);
+  const float speed = 1.25f + difficulty * 0.28f;
+  const int travel_x = 22 + difficulty * 7;
+  const int travel_y = 12 + difficulty * 4;
+  const int weave_x = difficulty == 0
+      ? 0
+      : static_cast<int>(std::sin(now / (173000.0 / speed)) *
+                         (5 + difficulty * 2));
+  const int weave_y = difficulty < 2
+      ? 0
+      : static_cast<int>(std::sin(now / (127000.0 / speed)) *
+                         (3 + difficulty));
+  boss_draw_x = kFaceX +
+      static_cast<int>(std::sin(now / (520000.0 / speed)) * travel_x) +
+      weave_x;
+  boss_draw_y = kFaceY +
+      static_cast<int>(std::sin(now / (350000.0 / speed)) * travel_y) +
+      weave_y;
+  boss_draw_x = std::clamp(boss_draw_x, 58, kDisplayWidth - kFaceSize);
+  boss_draw_y = std::clamp(boss_draw_y, 28, 164);
   if (fight_state == FightState::ChiWins) {
     const int64_t defeated_age = now - round_state_since_us;
     boss_draw_x = kFaceX + static_cast<int>(std::sin(now / 65000.0) * 3.0f);
     boss_draw_y = kFaceY + std::min<int64_t>(48, defeated_age / 26000);
   }
-  if (fight_level >= 4) {
-    boss_draw_x += static_cast<int>(std::sin(now / 73000.0) * (fight_level - 3));
+  if (fight_level >= 4 && fight_state == FightState::Fighting) {
+    const int dodge = std::min(18, 5 + (fight_level - 4) * 3);
+    boss_draw_x += ((now / 115000) & 1) ? -dodge : dodge;
+    boss_draw_y += ((now / 165000) & 1) ? dodge / 2 : -dodge / 2;
   }
   if (boss_state == BossState::Warning) {
     boss_draw_x += ((now / 45000) & 1) ? -4 : 2;
@@ -591,15 +636,21 @@ void draw_fight_hud(int64_t now) {
     }
   } else if (fight_state == FightState::ChiWins ||
              fight_state == FightState::FaceWins) {
-    fill_rect(45, 43, 150, 66, rgb565(7, 8, 20));
-    draw_rect(45, 43, 150, 66, rgb565(255, 210, 55));
-    draw_centered_text("K.O.", 57, 4, rgb565(255, 245, 225));
+    const int64_t age = now - round_state_since_us;
+    const float entrance = std::min(1.0f, age / 320000.0f);
+    const float pulse = 1.0f + 0.035f * std::sin(age / 110000.0f);
     if (fight_state == FightState::ChiWins) {
-      draw_centered_rgba(ui_chi_wins_rgba, ui_chi_wins_width,
-                         ui_chi_wins_height, 132);
+      const float scale = (0.72f + entrance * 0.88f) * pulse;
+      draw_centered_scaled_rgba(
+          ui_chi_wins_rgba, ui_chi_wins_width, ui_chi_wins_height,
+          static_cast<int>(ui_chi_wins_width * scale),
+          static_cast<int>(ui_chi_wins_height * scale), 28);
     } else {
-      draw_centered_rgba(ui_face_wins_rgba, ui_face_wins_width,
-                         ui_face_wins_height, 132);
+      const float scale = (0.72f + entrance * 0.78f) * pulse;
+      draw_centered_scaled_rgba(
+          ui_face_wins_rgba, ui_face_wins_width, ui_face_wins_height,
+          static_cast<int>(ui_face_wins_width * scale),
+          static_cast<int>(ui_face_wins_height * scale), 32);
     }
     const bool won = fight_state == FightState::ChiWins;
     const uint8_t *left = won ? ui_next_level_rgba : ui_retry_rgba;
@@ -1082,6 +1133,8 @@ void reset_fight() {
   fight_level = 1;
   guard_active = false;
   combo = 0;
+  chi_hit_count = 0;
+  pending_chi_victory = false;
   game_action = GameAction::None;
   combat_motion = CombatMotion::Home;
   queued_attacks = 0;
@@ -1096,9 +1149,11 @@ void prepare_round(int64_t now, bool advance_level) {
   boss_state = BossState::Idle;
   boss_warning_feint = false;
   boss_body_attack = false;
+  pending_chi_victory = false;
   chi_hp = 100;
   boss_hp = std::min(180, 100 + (fight_level - 1) * 12);
   combo = 0;
+  chi_hit_count = 0;
   guard_active = false;
   chi_x = 12;
   chi_y = 136;
@@ -1166,6 +1221,16 @@ bool update_fight(int64_t now, bool got_touch, bool got_sound, int x, int y) {
     const int64_t duration = game_action_frame_us(game_action) *
                              game_action_frame_count(game_action);
     if (now - game_action_started_us >= duration) {
+      if (pending_chi_victory) {
+        pending_chi_victory = false;
+        fight_state = FightState::ChiWins;
+        round_state_since_us = now;
+        combat_motion = CombatMotion::Home;
+        moving = false;
+        start_game_action(GameAction::Victory, now);
+        ESP_LOGI(TAG, "FIGHT_EVENT type=CHI_WIN level=%d", fight_level);
+        return true;
+      }
       game_action = GameAction::None;
       action = Action::Idle;
       if (combat_motion == CombatMotion::Attack) {
@@ -1175,6 +1240,8 @@ bool update_fight(int64_t now, bool got_touch, bool got_sound, int x, int y) {
       }
     }
   }
+
+  if (pending_chi_victory) return true;
 
   guard_active = combat_motion == CombatMotion::Home && held &&
                  touch_hits_character(held_x, held_y);
@@ -1217,7 +1284,7 @@ bool update_fight(int64_t now, bool got_touch, bool got_sound, int x, int y) {
                                       12.0f, 128.0f);
     const float attack_y = std::clamp(static_cast<float>(boss_draw_y + 14),
                                       62.0f, 150.0f);
-    if (move_toward(attack_x, attack_y, 175.0f + fight_level * 8.0f)) {
+    if (move_toward(attack_x, attack_y, 260.0f + fight_level * 12.0f)) {
       moving = false;
       combat_motion = CombatMotion::Attack;
       --queued_attacks;
@@ -1227,13 +1294,15 @@ bool update_fight(int64_t now, bool got_touch, bool got_sound, int x, int y) {
       const bool heavy = chi_hit_count % 3 == 0;
       boss_hp = std::max(0, boss_hp - (heavy ? 12 : 7));
       start_game_action(heavy ? GameAction::Kick : GameAction::PunchCombo, now);
-      ESP_LOGI(TAG, "FIGHT_EVENT type=CHI_HIT level=%d damage=%d boss_hp=%d queued=%d",
-               fight_level, heavy ? 12 : 7, boss_hp, queued_attacks);
+      ESP_LOGI(TAG,
+               "FIGHT_EVENT type=CHI_HIT level=%d attack=%s damage=%d "
+               "boss_hp=%d queued=%d",
+               fight_level, heavy ? "kick" : "punch", heavy ? 12 : 7,
+               boss_hp, queued_attacks);
       if (boss_hp == 0) {
-        fight_state = FightState::ChiWins;
-        round_state_since_us = now;
-        combat_motion = CombatMotion::Home;
-        start_game_action(GameAction::Victory, now);
+        pending_chi_victory = true;
+        queued_attacks = 0;
+        boss_state = BossState::Idle;
       }
     }
   } else if (combat_motion == CombatMotion::Retreat) {
@@ -1245,6 +1314,7 @@ bool update_fight(int64_t now, bool got_touch, bool got_sound, int x, int y) {
     }
   }
 
+  if (pending_chi_victory) return true;
   if (fight_state != FightState::Fighting) return true;
   if (boss_state == BossState::Idle && now >= next_boss_attack_us) {
     boss_state = BossState::Warning;
