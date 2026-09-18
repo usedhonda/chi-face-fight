@@ -200,6 +200,12 @@ bool guard_active = false;
 bool camera_active = false;
 bool camera_stop_pending = false;
 bool camera_start_pending = false;
+portMUX_TYPE camera_watch_mux = portMUX_INITIALIZER_UNLOCKED;
+bool camera_watch_expected = false;
+int64_t last_camera_progress_us = 0;
+uint32_t last_camera_signature = 0;
+uint32_t repeated_camera_frames = 0;
+uint32_t camera_restart_count = 0;
 int arena_index = 0;
 int fight_level = 1;
 bool boss_warning_feint = false;
@@ -481,8 +487,10 @@ void draw_face_portrait(int64_t now) {
   boss_draw_y = std::clamp(boss_draw_y, 28, 164);
   if (fight_state == FightState::ChiWins) {
     const int64_t defeated_age = now - round_state_since_us;
-    boss_draw_x = kFaceX + static_cast<int>(std::sin(now / 65000.0) * 3.0f);
-    boss_draw_y = kFaceY + std::min<int64_t>(48, defeated_age / 26000);
+    boss_draw_x = (kDisplayWidth - kFaceSize) / 2 +
+                  static_cast<int>(std::sin(now / 90000.0) * 3.0f);
+    boss_draw_y = 138 + static_cast<int>(
+        std::sin(defeated_age / 150000.0) * 2.0f);
   }
   if (fight_level >= 4 && fight_state == FightState::Fighting) {
     const int dodge = std::min(18, 5 + (fight_level - 4) * 3);
@@ -589,20 +597,24 @@ void draw_fight_hud(int64_t now) {
       else status = "FACE FOUND!";
     }
     fill_rect(0, 0, kDisplayWidth, 24, rgb565(12, 18, 30));
-    draw_centered_text(status, 7, 1, guide);
+    draw_centered_text(status, 13, 1, guide);
     return;
   }
-  fill_rect(6, 5, 104, 12, rgb565(38, 30, 42));
-  fill_rect(8, 7, chi_hp, 8, rgb565(70, 220, 130));
-  fill_rect(130, 5, 104, 12, rgb565(38, 30, 42));
-  fill_rect(232 - boss_hp, 7, boss_hp, 8, rgb565(245, 75, 70));
+  const int boss_max_hp = std::min(180, 100 + (fight_level - 1) * 12);
+  const int chi_bar = chi_hp * 44 / 100;
+  const int you_bar = boss_hp * 44 / boss_max_hp;
+  fill_rect(0, 0, kDisplayWidth, 25, rgb565(12, 12, 25));
+  draw_text("CHI", 28, 12, 1, rgb565(255, 255, 255));
+  draw_text("YOU", 194, 12, 1, rgb565(255, 255, 255));
+  fill_rect(50, 10, 48, 12, rgb565(65, 52, 67));
+  fill_rect(142, 10, 48, 12, rgb565(65, 52, 67));
+  fill_rect(52, 12, chi_bar, 8, rgb565(70, 220, 130));
+  fill_rect(188 - you_bar, 12, you_bar, 8, rgb565(245, 75, 70));
   if (combo > 1) {
-    fill_rect(106, 22, std::min(combo, 10) * 3, 5, rgb565(255, 210, 55));
+    fill_rect(106, 21, std::min(combo, 10) * 3, 4, rgb565(255, 210, 55));
   }
-  draw_text("CHI", 7, 7, 1, rgb565(255,255,255));
-  draw_text("BOSS", 202, 7, 1, rgb565(255,255,255));
-  char level_text[] = {'L', 'V', 'L', ' ', static_cast<char>('0' + std::min(fight_level, 9)), '\0'};
-  draw_centered_text(level_text, 20, 1, rgb565(255, 225, 80));
+  char level_text[] = {'L', static_cast<char>('0' + std::min(fight_level, 9)), '\0'};
+  draw_centered_text(level_text, 12, 1, rgb565(255, 225, 80));
   if (fight_state == FightState::Intro) {
     const int64_t age = now - round_state_since_us;
     const int slide_y = age < 500000
@@ -722,6 +734,12 @@ bool start_camera() {
   }
   camera_active = true;
   camera_start_pending = false;
+  last_camera_signature = 0;
+  repeated_camera_frames = 0;
+  portENTER_CRITICAL(&camera_watch_mux);
+  camera_watch_expected = true;
+  last_camera_progress_us = esp_timer_get_time();
+  portEXIT_CRITICAL(&camera_watch_mux);
   ESP_LOGI(TAG, "CAMERA_READY pid=0x%04x format=JPEG size=320x240",
            sensor == nullptr ? 0 : sensor->id.PID);
   return true;
@@ -739,8 +757,45 @@ void stop_camera(const char *reason) {
   }
   camera_active = false;
   camera_stop_pending = false;
+  portENTER_CRITICAL(&camera_watch_mux);
+  camera_watch_expected = false;
+  portEXIT_CRITICAL(&camera_watch_mux);
   ESP_LOGI(TAG, "CAMERA_STOPPED reason=%s psram_free=%u", reason,
            static_cast<unsigned>(heap_caps_get_free_size(MALLOC_CAP_SPIRAM)));
+}
+
+uint32_t camera_frame_signature(const camera_fb_t *frame) {
+  uint32_t hash = 2166136261u;
+  for (size_t i = 0; i < frame->len; ++i) {
+    hash ^= frame->buf[i];
+    hash *= 16777619u;
+  }
+  return hash ^ static_cast<uint32_t>(frame->len);
+}
+
+void mark_camera_progress(int64_t now) {
+  portENTER_CRITICAL(&camera_watch_mux);
+  last_camera_progress_us = now;
+  portEXIT_CRITICAL(&camera_watch_mux);
+}
+
+void camera_watchdog_task(void *) {
+  while (true) {
+    vTaskDelay(pdMS_TO_TICKS(500));
+    bool expected = false;
+    int64_t last_progress = 0;
+    portENTER_CRITICAL(&camera_watch_mux);
+    expected = camera_watch_expected;
+    last_progress = last_camera_progress_us;
+    portEXIT_CRITICAL(&camera_watch_mux);
+    const int64_t now = esp_timer_get_time();
+    if (expected && last_progress > 0 && now - last_progress > 3000000) {
+      ESP_LOGE(TAG, "CAMERA_STALL type=NO_PROGRESS age_ms=%lld action=RESTART",
+               (now - last_progress) / 1000);
+      vTaskDelay(pdMS_TO_TICKS(20));
+      esp_restart();
+    }
+  }
 }
 
 void init_lcd() {
@@ -1558,6 +1613,7 @@ extern "C" void app_main(void) {
   xTaskCreate(microphone_task, "chi_mic", 4096, nullptr, 2, nullptr);
 
   if (!start_camera()) return;
+  xTaskCreate(camera_watchdog_task, "camera_watch", 2048, nullptr, 3, nullptr);
 
   detector = new HumanFaceDetect();
   ESP_LOGI(TAG, "AI_READY model=human_face_msr_mnp_s8_v1 every=%d",
@@ -1578,6 +1634,28 @@ extern "C" void app_main(void) {
       if (fb == nullptr) {
         ESP_LOGW(TAG, "FRAME_DROP reason=NULL");
         vTaskDelay(pdMS_TO_TICKS(10));
+        continue;
+      }
+      const uint32_t signature = camera_frame_signature(fb);
+      if (signature == last_camera_signature) {
+        ++repeated_camera_frames;
+      } else {
+        last_camera_signature = signature;
+        repeated_camera_frames = 0;
+      }
+      if (repeated_camera_frames >= 24) {
+        esp_camera_fb_return(fb);
+        ++camera_restart_count;
+        ESP_LOGW(TAG,
+                 "CAMERA_STALL type=REPEATED_FRAME repeats=%u action=REINIT",
+                 repeated_camera_frames);
+        stop_camera("REPEATED_FRAME");
+        if (camera_active) {
+          ESP_LOGE(TAG, "CAMERA_RECOVERY_FAILED stage=DEINIT action=RESTART");
+          esp_restart();
+        }
+        camera_start_pending = true;
+        vTaskDelay(pdMS_TO_TICKS(50));
         continue;
       }
       dl::image::jpeg_img_t jpeg = {.data = fb->buf, .data_len = fb->len};
@@ -1671,6 +1749,7 @@ extern "C" void app_main(void) {
     if (result_overlay) draw_fight_hud(now);
     ESP_ERROR_CHECK(esp_lcd_panel_draw_bitmap(panel, 0, 0, kDisplayWidth,
                                               kDisplayHeight, screen));
+    if (camera_frame) mark_camera_progress(now);
     if (image.data != nullptr) heap_caps_free(image.data);
     if (camera_stop_pending) stop_camera("FACE_CAPTURED");
     ++frame_count;
@@ -1686,7 +1765,8 @@ extern "C" void app_main(void) {
                "mic=%.0f chi=(%.0f,%.0f) moving=%s action=%u game=%u "
                "fight=%u chi_hp=%d boss_hp=%d guard=%s combo=%d touches=%u "
                "releases=%u touch_errors=%u hits=%u psram_free=%u "
-               "psram_largest=%u camera=%s",
+               "psram_largest=%u camera=%s camera_repeats=%u "
+               "camera_restarts=%u",
                frame_count, person_present ? "yes" : "no", person_count,
                person_score, inference_ms, level, chi_x, chi_y,
                moving ? "yes" : "no", static_cast<unsigned>(action),
@@ -1697,7 +1777,8 @@ extern "C" void app_main(void) {
                touch_read_errors, chi_hit_count,
                static_cast<unsigned>(heap_caps_get_free_size(MALLOC_CAP_SPIRAM)),
                static_cast<unsigned>(heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)),
-               camera_active ? "on" : "off");
+               camera_active ? "on" : "off", repeated_camera_frames,
+               camera_restart_count);
       last_report = now;
     }
   }
