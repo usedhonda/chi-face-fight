@@ -106,6 +106,7 @@ constexpr int kFaceY = 54;
 constexpr int64_t kComboTimeoutUs = 1200000;
 constexpr int64_t kBossWarningUs = 750000;
 constexpr int kChoiceY = 218;
+constexpr int64_t kLockOnUs = 2000000;
 
 static const char *TAG = "chi_creature";
 
@@ -132,6 +133,7 @@ enum class FightState : uint8_t {
   Fighting,
   ChiWins,
   FaceWins,
+  LockOn,
 };
 enum class BossState : uint8_t { Idle = 0, Warning, Strike };
 enum class CombatMotion : uint8_t { Home = 0, Approach, Attack, Retreat };
@@ -141,6 +143,10 @@ i2c_master_bus_handle_t touch_bus = nullptr;
 i2c_master_dev_handle_t touch_device = nullptr;
 uint16_t *screen = nullptr;
 uint16_t *face_portrait = nullptr;
+uint16_t *lock_backdrop = nullptr;
+int lock_cx = kDisplayWidth / 2;
+int lock_cy = kDisplayHeight / 2;
+int lock_size = 80;
 uint8_t *face_alpha = nullptr;
 HumanFaceDetect *detector = nullptr;
 
@@ -521,8 +527,22 @@ void capture_face_candidate(const dl::image::img_t &image) {
           : d >= 1.0f ? 0 : static_cast<uint8_t>((1.0f - d) / 0.22f * 255.0f);
     }
   }
+  // Freeze the capture frame as the backdrop for the sniper lock-on sequence.
+  if (lock_backdrop != nullptr) {
+    for (int y = 0; y < kCameraHeight; ++y) {
+      for (int x = 0; x < kDisplayWidth; ++x) {
+        const size_t source =
+            (static_cast<size_t>(y) * kCameraWidth + x + kCropX) * 3;
+        lock_backdrop[y * kDisplayWidth + x] =
+            rgb565(rgb[source], rgb[source + 1], rgb[source + 2]);
+      }
+    }
+  }
+  lock_cx = std::clamp(cx - kCropX, 0, kDisplayWidth - 1);
+  lock_cy = std::clamp(cy + kCameraY, kCameraY, kCameraY + kCameraHeight - 1);
+  lock_size = std::clamp(std::max(person_w, person_h), 36, 150);
   face_ready = true;
-  fight_state = FightState::Intro;
+  fight_state = FightState::LockOn;
   boss_state = BossState::Idle;
   chi_hp = 100;
   boss_hp = 100;
@@ -833,6 +853,9 @@ bool start_camera() {
   sensor_t *sensor = esp_camera_sensor_get();
   if (sensor != nullptr && sensor->id.PID == OV3660_PID) {
     sensor->set_vflip(sensor, 1);
+    // Mirror at the sensor so preview, detection boxes and the captured
+    // portrait all share the selfie orientation.
+    sensor->set_hmirror(sensor, 1);
     sensor->set_brightness(sensor, 1);
   }
   camera_active = true;
@@ -1331,6 +1354,16 @@ bool update_fight(int64_t now, bool got_touch, bool got_sound, int x, int y) {
   (void)got_sound;
   if (fight_state == FightState::FindFace) return false;
 
+  if (fight_state == FightState::LockOn) {
+    guard_active = false;
+    if (now - round_state_since_us >= kLockOnUs) {
+      fight_state = FightState::Intro;
+      round_state_since_us = now;
+      ESP_LOGI(TAG, "FIGHT_EVENT type=LOCK_ON_COMPLETE");
+    }
+    return true;
+  }
+
   if (fight_state == FightState::Intro) {
     guard_active = false;
     if (now - round_state_since_us >= 2200000) {
@@ -1749,6 +1782,126 @@ void run_detection(dl::image::img_t &image, int64_t now) {
 }
 }  // namespace
 
+// Sniper-scope sequence over the frozen capture frame: acquire, lock, fire.
+void draw_lock_on(int64_t now) {
+  const int64_t age = now - round_state_since_us;
+  const float acquire = std::min(1.0f, age / 800000.0f);
+  const float ease = 1.0f - (1.0f - acquire) * (1.0f - acquire) * (1.0f - acquire);
+  const bool locked = age >= 800000;
+  const bool fired = age >= 1150000;
+  const float sway = (1.0f - ease) * 14.0f;
+  int cx = kDisplayWidth / 2 +
+           static_cast<int>((lock_cx - kDisplayWidth / 2) * ease +
+                            std::sin(age / 90000.0f) * sway);
+  int cy = kDisplayHeight / 2 +
+           static_cast<int>((lock_cy - kDisplayHeight / 2) * ease +
+                            std::cos(age / 70000.0f) * sway);
+  if (fired && age < 1600000) {
+    const int kick = static_cast<int>((1600000 - age) / 60000);
+    cx += ((age / 30000) & 1) ? kick : -kick;
+    cy -= kick;
+  }
+  const int radius_end = lock_size * 3 / 4 + 12;
+  const int radius = static_cast<int>(112 + (radius_end - 112) * ease);
+  const uint16_t reticle = locked ? rgb565(255, 45, 40) : rgb565(90, 255, 140);
+  const uint16_t shade = rgb565(0, 14, 8);
+  const int inner = (radius - 1) * (radius - 1);
+  const int outer = (radius + 2) * (radius + 2);
+
+  fill_rect(0, 0, kDisplayWidth, kDisplayHeight, rgb565(0, 0, 0));
+  for (int y = kCameraY; y < kCameraY + kCameraHeight; ++y) {
+    for (int x = 0; x < kDisplayWidth; ++x) {
+      const int dx = x - cx;
+      const int dy = y - cy;
+      const int d = dx * dx + dy * dy;
+      const uint16_t pixel = lock_backdrop != nullptr
+          ? lock_backdrop[(y - kCameraY) * kDisplayWidth + x]
+          : rgb565(20, 30, 30);
+      uint16_t out = d > outer ? blend565(shade, pixel, 205) : pixel;
+      if (d >= inner && d <= outer) out = reticle;
+      screen[y * kDisplayWidth + x] = out;
+    }
+  }
+
+  // Crosshair with a centre gap and range ticks.
+  const int gap = locked ? 6 : 10;
+  fill_rect(cx - radius, cy, radius - gap, 1, reticle);
+  fill_rect(cx + gap, cy, radius - gap, 1, reticle);
+  fill_rect(cx, cy - radius, 1, radius - gap, reticle);
+  fill_rect(cx, cy + gap, 1, radius - gap, reticle);
+  for (int t = gap + 8; t < radius; t += 10) {
+    fill_rect(cx - 2, cy + t, 5, 1, reticle);
+    fill_rect(cx + t, cy - 2, 1, 5, reticle);
+  }
+  draw_disc(cx, cy, 1, reticle);
+
+  if (locked) {
+    // Corner brackets snap onto the face box.
+    const int snap = std::max(0, static_cast<int>(18 - (age - 800000) / 12000));
+    const int half = lock_size / 2 + 4 + snap;
+    const int arm = std::max(8, lock_size / 5);
+    const uint16_t bracket = ((age / 100000) & 1) ? rgb565(255, 45, 40)
+                                                    : rgb565(255, 220, 60);
+    for (int sx : {-1, 1}) {
+      for (int sy : {-1, 1}) {
+        const int bx = lock_cx + sx * half;
+        const int by = lock_cy + sy * half;
+        fill_rect(sx < 0 ? bx : bx - arm + 1, by - (sy < 0 ? 0 : 1), arm, 2, bracket);
+        fill_rect(bx - (sx < 0 ? 0 : 1), sy < 0 ? by : by - arm + 1, 2, arm, bracket);
+      }
+    }
+  }
+
+  if (fired) {
+    // Bullet hole with radiating cracks at the impact point.
+    const uint16_t crack = rgb565(235, 240, 245);
+    for (int i = 0; i < 7; ++i) {
+      const float angle = i * 0.8976f + 0.3f;
+      const int len = 14 + (i * 7) % 12;
+      for (int r = 5; r < len; ++r) {
+        set_pixel(lock_cx + static_cast<int>(std::cos(angle) * r),
+                  lock_cy + static_cast<int>(std::sin(angle) * r), crack);
+      }
+    }
+    draw_disc(lock_cx, lock_cy, 5, rgb565(20, 20, 24));
+    draw_ring(lock_cx, lock_cy, 6, crack);
+  }
+
+  // Heads-up text.
+  fill_rect(0, 0, kDisplayWidth, kCameraY, rgb565(0, 0, 0));
+  fill_rect(0, kCameraY + kCameraHeight, kDisplayWidth,
+            kDisplayHeight - kCameraY - kCameraHeight, rgb565(0, 0, 0));
+  if (!locked) {
+    if ((age / 150000) & 1) {
+      draw_centered_text("ACQUIRING TARGET", 7, 1, rgb565(90, 255, 140));
+    }
+  } else if (!fired) {
+    draw_centered_text("TARGET LOCKED", 7, 1, rgb565(255, 60, 50));
+  } else {
+    draw_centered_text("TARGET DOWN", 7, 1, rgb565(255, 225, 80));
+  }
+  char range[24];
+  const float meters = 48.0f - ease * 45.6f;
+  std::snprintf(range, sizeof(range), "RNG %04.1fM  WIND 0.%dR", meters,
+                static_cast<int>((age / 70000) % 10));
+  draw_centered_text(range, kCameraY + kCameraHeight + 7, 1,
+                     locked ? rgb565(255, 60, 50) : rgb565(90, 255, 140));
+
+  if (fired && age < 1230000) {
+    fill_rect(0, 0, kDisplayWidth, kDisplayHeight, rgb565(255, 255, 255));
+  } else if (fired && age < 1750000) {
+    const int bang_y = 58 - static_cast<int>(std::min<int64_t>(age - 1230000, 200000) / 20000);
+    draw_centered_text("BANG!", bang_y, 4, rgb565(255, 225, 60));
+  }
+  if (age >= 1750000) {
+    const uint8_t fade = static_cast<uint8_t>(
+        std::min<int64_t>(255, (age - 1750000) * 255 / 250000));
+    for (int i = 0; i < kDisplayWidth * kDisplayHeight; ++i) {
+      screen[i] = blend565(rgb565(0, 0, 0), screen[i], fade);
+    }
+  }
+}
+
 extern "C" void app_main(void) {
   ESP_LOGI(TAG, "BOOT_START chi_camera_creature reset_reason=%d",
            static_cast<int>(esp_reset_reason()));
@@ -1771,6 +1924,10 @@ extern "C" void app_main(void) {
     ESP_LOGE(TAG, "BOOT_FAIL stage=FACE_ALLOC");
     return;
   }
+  // Optional: without it the lock-on sequence draws over a plain backdrop.
+  lock_backdrop = static_cast<uint16_t *>(heap_caps_malloc(
+      kDisplayWidth * kCameraHeight * sizeof(uint16_t),
+      MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
   init_lcd();
   fill_rect(0, 0, kDisplayWidth, kDisplayHeight, rgb565(8, 18, 28));
   draw_centered_text("STARTING CAMERA...", 132, 1, rgb565(255, 225, 90));
@@ -1855,6 +2012,16 @@ extern "C" void app_main(void) {
       continue;
     }
     last_render = now;
+    if (fight_state == FightState::LockOn) {
+      draw_lock_on(now);
+      ESP_ERROR_CHECK(esp_lcd_panel_draw_bitmap(panel, 0, 0, kDisplayWidth,
+                                                kDisplayHeight, screen));
+      if (image.data != nullptr) heap_caps_free(image.data);
+      if (camera_stop_pending) stop_camera("FACE_CAPTURED");
+      ++frame_count;
+      vTaskDelay(pdMS_TO_TICKS(1));
+      continue;
+    }
     if (camera_frame) camera_to_screen(image);
     else draw_arena();
     if (camera_frame) draw_detection();
