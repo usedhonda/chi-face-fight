@@ -595,11 +595,11 @@ void draw_face_portrait(int64_t now) {
       weave_y;
   boss_draw_x = std::clamp(boss_draw_x, 58, kDisplayWidth - kFaceSize);
   boss_draw_y = std::clamp(boss_draw_y, 28, 164);
-  if (fight_state == FightState::ChiWins) {
+  if (fight_state == FightState::ChiWins ||
+      fight_state == FightState::FaceWins) {
     const int64_t defeated_age = now - round_state_since_us;
-    boss_draw_x = (kDisplayWidth - kFaceSize) / 2 +
-                  static_cast<int>(std::sin(now / 90000.0) * 3.0f);
-    boss_draw_y = 138 + static_cast<int>(
+    boss_draw_x = fight_state == FightState::ChiWins ? 12 : 140;
+    boss_draw_y = 118 + static_cast<int>(
         std::sin(defeated_age / 150000.0) * 2.0f);
   }
   if (fight_level >= 4 && fight_state == FightState::Fighting) {
@@ -770,17 +770,17 @@ void draw_fight_hud(int64_t now) {
     const float entrance = std::min(1.0f, age / 320000.0f);
     const float pulse = 1.0f + 0.035f * std::sin(age / 110000.0f);
     if (fight_state == FightState::ChiWins) {
-      const float scale = (0.72f + entrance * 0.88f) * pulse;
+      const float scale = (0.65f + entrance * 0.25f) * pulse;
       draw_centered_scaled_rgba(
           ui_chi_wins_rgba, ui_chi_wins_width, ui_chi_wins_height,
           static_cast<int>(ui_chi_wins_width * scale),
-          static_cast<int>(ui_chi_wins_height * scale), 28);
+          static_cast<int>(ui_chi_wins_height * scale), 26);
     } else {
-      const float scale = (0.72f + entrance * 0.78f) * pulse;
+      const float scale = (0.65f + entrance * 0.25f) * pulse;
       draw_centered_scaled_rgba(
           ui_face_wins_rgba, ui_face_wins_width, ui_face_wins_height,
           static_cast<int>(ui_face_wins_width * scale),
-          static_cast<int>(ui_face_wins_height * scale), 32);
+          static_cast<int>(ui_face_wins_height * scale), 26);
     }
     const bool won = fight_state == FightState::ChiWins;
     const uint8_t *left = won ? ui_next_level_rgba : ui_retry_rgba;
@@ -2126,8 +2126,11 @@ extern "C" void app_main(void) {
       int sprite_y = static_cast<int>(chi_y) + sprite_offset_y;
       if (fight_state == FightState::ChiWins) {
         const float celebration = (now - round_state_since_us) / 1000000.0f;
-        sprite_x = 70 + static_cast<int>(std::sin(celebration * 4.1f) * 62.0f);
-        sprite_y = 78 + static_cast<int>(std::sin(celebration * 6.7f) * 48.0f);
+        sprite_x = 128 + static_cast<int>(std::sin(celebration * 4.1f) * 8.0f);
+        sprite_y = 98 + static_cast<int>(std::sin(celebration * 6.7f) * 2.0f);
+      } else if (fight_state == FightState::FaceWins) {
+        sprite_x = 10;
+        sprite_y = 98;
       }
       draw_sprite(atlas, sprite_frame, atlas_frames,
                   sprite_x, sprite_y);

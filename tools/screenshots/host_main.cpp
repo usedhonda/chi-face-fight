@@ -61,8 +61,11 @@ void render_frame(int64_t now) {
     int sprite_y = static_cast<int>(chi_y) + sprite_offset_y;
     if (fight_state == FightState::ChiWins) {
       const float celebration = (now - round_state_since_us) / 1000000.0f;
-      sprite_x = 70 + static_cast<int>(std::sin(celebration * 4.1f) * 62.0f);
-      sprite_y = 78 + static_cast<int>(std::sin(celebration * 6.7f) * 48.0f);
+      sprite_x = 128 + static_cast<int>(std::sin(celebration * 4.1f) * 8.0f);
+      sprite_y = 98 + static_cast<int>(std::sin(celebration * 6.7f) * 2.0f);
+    } else if (fight_state == FightState::FaceWins) {
+      sprite_x = 10;
+      sprite_y = 98;
     }
     draw_sprite(atlas, sprite_frame, atlas_frames, sprite_x, sprite_y);
   }
