@@ -10,7 +10,7 @@ transparent, moving opponent while Secretary Chi walks, punches, kicks, dodges,
 blocks, gets hit, and celebrates using pixel-art sprite animation.
 
 <p align="center">
-  <img src="docs/images/lock-on.gif" width="320" alt="Sniper lock-on sequence after the face is captured">
+  <img src="docs/images/lock-on-v2.gif" width="320" alt="Sniper lock-on sequence after the face is captured">
 </p>
 
 ## Screenshots

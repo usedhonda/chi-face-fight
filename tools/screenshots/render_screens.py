@@ -6,7 +6,7 @@ hardware functions stripped out. An AI-generated fictional adult stands in for
 the camera input so no real person appears in the images.
 
 Usage: uv run --with pillow python tools/screenshots/render_screens.py
-Output: docs/images/*.png and docs/images/lock-on.gif
+Output: docs/images/*.png and docs/images/lock-on-v2.gif
 """
 import pathlib
 import re
@@ -83,7 +83,7 @@ def main() -> None:
         for ppm in sorted(frames.glob("[0-9]*.ppm")):
             load_ppm(ppm).save(OUT / f"{ppm.stem}.png")
         lock = [load_ppm(p) for p in sorted(frames.glob("lock-*.ppm"))]
-        lock[0].save(OUT / "lock-on.gif", save_all=True, append_images=lock[1:],
+        lock[0].save(OUT / "lock-on-v2.gif", save_all=True, append_images=lock[1:],
                      duration=50, loop=0)
         lock[len(lock) // 2].save(OUT / "02-lock-on.png")
     print("wrote", ", ".join(sorted(p.name for p in OUT.iterdir())))
