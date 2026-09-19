@@ -107,6 +107,8 @@ constexpr int64_t kComboTimeoutUs = 1200000;
 constexpr int64_t kBossWarningUs = 750000;
 constexpr int kChoiceY = 218;
 constexpr int64_t kLockOnUs = 2000000;
+constexpr int kFlickDistance = 20;
+constexpr int64_t kFlickWindowUs = 350000;
 
 static const char *TAG = "chi_creature";
 
@@ -161,6 +163,12 @@ uint32_t touch_read_errors = 0;
 int64_t last_touch_poll_us = 0;
 volatile float mic_level = 0.0f;
 volatile bool sound_pending = false;
+// Latched by the touch task when a press travels far enough to be a flick.
+volatile bool flick_pending = false;
+volatile int flick_origin_x = 0;
+volatile int flick_origin_y = 0;
+volatile int flick_dx = 0;
+volatile int flick_dy = 0;
 
 float chi_x = 78.0f;
 float chi_y = 146.0f;
@@ -221,10 +229,6 @@ CombatMotion combat_motion = CombatMotion::Home;
 int queued_attacks = 0;
 int queued_crits = 0;
 int64_t last_combat_motion_us = 0;
-bool flick_armed = false;
-int flick_x = 0;
-int flick_y = 0;
-int64_t flick_start_us = 0;
 int64_t dodge_started_us = 0;
 int64_t dodge_until_us = 0;
 int64_t last_dodge_us = 0;
@@ -427,7 +431,7 @@ int boss_max_hp() { return std::min(180, 100 + (fight_level - 1) * 12); }
 
 void reset_combat_extras() {
   queued_crits = 0;
-  flick_armed = false;
+  flick_pending = false;
   dodge_until_us = 0;
   weak_until_us = 0;
   next_weak_us = 0;
@@ -793,6 +797,9 @@ void draw_fight_hud(int64_t now) {
     if (fight_level <= 2) {
       draw_centered_text("OR FLICK CHI", 54, 1, rgb565(255, 225, 80));
     }
+  } else if (boss_state == BossState::Strike && !guard_active &&
+             fight_level <= 2) {
+    draw_centered_text("FLICK NOW!", 34, 2, rgb565(120, 220, 255));
   } else if (now - last_counter_us < 500000) {
     draw_centered_text("COUNTER!", 34, 2, rgb565(255, 225, 60));
   } else if (now - last_crit_us < 500000) {
@@ -992,19 +999,58 @@ void poll_touch(int64_t now) {
   }
   const bool pressed = (data[1] & 0x0f) > 0;
   touch_pressed = pressed;
+  static int trace_x = 0, trace_y = 0, trace_samples = 0, trace_max = 0;
+  static int64_t trace_start_us = 0;
   if (pressed) {
     const int raw_x = ((data[2] & 0x0f) << 8) | data[3];
     const int raw_y = ((data[4] & 0x0f) << 8) | data[5];
+    portENTER_CRITICAL(&input_mux);
     touch_x = std::clamp(kDisplayWidth - 1 - raw_x, 0, kDisplayWidth - 1);
     touch_y = std::clamp(kDisplayHeight - 1 - raw_y, 0, kDisplayHeight - 1);
+    if (!was_pressed) touch_pending = true;
+    portEXIT_CRITICAL(&input_mux);
     if (!was_pressed) {
-      touch_pending = true;
       ++touch_event_count;
+      trace_x = touch_x;
+      trace_y = touch_y;
+      trace_samples = 0;
+      trace_max = 0;
+      trace_start_us = now;
     }
+    ++trace_samples;
+    const int tdx = touch_x - trace_x;
+    const int tdy = touch_y - trace_y;
+    const int d2 = tdx * tdx + tdy * tdy;
+    // Only the first qualifying sample of a press becomes a flick.
+    if (trace_max < kFlickDistance * kFlickDistance &&
+        d2 >= kFlickDistance * kFlickDistance &&
+        now - trace_start_us <= kFlickWindowUs) {
+      portENTER_CRITICAL(&input_mux);
+      flick_origin_x = trace_x;
+      flick_origin_y = trace_y;
+      flick_dx = tdx;
+      flick_dy = tdy;
+      flick_pending = true;
+      portEXIT_CRITICAL(&input_mux);
+    }
+    trace_max = std::max(trace_max, d2);
   } else if (was_pressed) {
     ++touch_release_count;
+    ESP_LOGI(TAG,
+             "TOUCH_TRACE start=(%d,%d) end=(%d,%d) max_d2=%d samples=%d "
+             "ms=%lld gesture=0x%02x",
+             trace_x, trace_y, touch_x, touch_y, trace_max, trace_samples,
+             (now - trace_start_us) / 1000, data[0]);
   }
   was_pressed = pressed;
+}
+
+// Polls at 100 Hz independent of rendering so fast flicks are sampled.
+void touch_task(void *) {
+  while (true) {
+    poll_touch(esp_timer_get_time());
+    vTaskDelay(pdMS_TO_TICKS(10));
+  }
 }
 
 void init_touch() {
@@ -1440,26 +1486,26 @@ bool update_fight(int64_t now, bool got_touch, bool got_sound, int x, int y) {
   // direction side-steps. It is decided before guard so the drag wins.
   const bool can_evade = combat_motion == CombatMotion::Home &&
       (game_action == GameAction::None || game_action == GameAction::Block);
-  if (got_touch && can_evade && touch_hits_character(x, y)) {
-    flick_armed = true;
-    flick_x = x;
-    flick_y = y;
-    flick_start_us = now;
+  bool flicked = false;
+  int fx = 0, fy = 0, fdx = 0, fdy = 0;
+  portENTER_CRITICAL(&input_mux);
+  if (flick_pending) {
+    flicked = true;
+    fx = flick_origin_x;
+    fy = flick_origin_y;
+    fdx = flick_dx;
+    fdy = flick_dy;
+    flick_pending = false;
   }
-  if (flick_armed && (!held || !can_evade || now - flick_start_us > 300000)) {
-    flick_armed = false;
-  }
-  if (flick_armed) {
-    const int dx = held_x - flick_x;
-    const int dy = held_y - flick_y;
-    if (dx * dx + dy * dy >= 28 * 28) {
-      flick_armed = false;
-      const bool jump = dy < 0 && -dy >= std::abs(dx);
-      start_game_action(jump ? GameAction::Jump : GameAction::Dodge, now);
-      dodge_started_us = now;
-      dodge_until_us = now + (jump ? 450000 : 380000);
-      ESP_LOGI(TAG, "FIGHT_EVENT type=EVADE move=%s", jump ? "jump" : "dodge");
-    }
+  portEXIT_CRITICAL(&input_mux);
+  if (flicked && can_evade && touch_hits_character(fx, fy)) {
+    const bool jump = fdy < 0 && -fdy >= std::abs(fdx);
+    const GameAction evade = jump ? GameAction::Jump : GameAction::Dodge;
+    start_game_action(evade, now);
+    dodge_started_us = now;
+    // Invulnerable for the whole evade animation.
+    dodge_until_us = now + game_action_frame_us(evade) * game_action_frame_count(evade);
+    ESP_LOGI(TAG, "FIGHT_EVENT type=EVADE move=%s", jump ? "jump" : "dodge");
   }
   const bool evading = game_action == GameAction::Dodge ||
                        game_action == GameAction::Jump;
@@ -1592,7 +1638,7 @@ bool update_fight(int64_t now, bool got_touch, bool got_sound, int x, int y) {
     boss_body_attack = false;
     next_boss_attack_us = now + boss_attack_delay_us() + esp_random() % 500000;
     if (now < dodge_until_us) {
-      const bool just = now - dodge_started_us <= 220000;
+      const bool just = now - dodge_started_us <= 250000;
       last_dodge_us = now;
       if (just) {
         last_counter_us = now;
@@ -1650,12 +1696,14 @@ void update_behavior(int64_t now) {
   bool got_sound = false;
   int x = 0;
   int y = 0;
+  portENTER_CRITICAL(&input_mux);
   if (touch_pending) {
     got_touch = true;
     x = touch_x;
     y = touch_y;
     touch_pending = false;
   }
+  portEXIT_CRITICAL(&input_mux);
   if (sound_pending) {
     got_sound = true;
     sound_pending = false;
@@ -1936,6 +1984,7 @@ extern "C" void app_main(void) {
   ESP_LOGI(TAG, "LCD_READY width=240 height=280 spi_hz=40000000");
 
   init_touch();
+  xTaskCreate(touch_task, "chi_touch", 3072, nullptr, 4, nullptr);
   xTaskCreate(microphone_task, "chi_mic", 4096, nullptr, 2, nullptr);
 
   if (!start_camera()) return;
@@ -1998,7 +2047,6 @@ extern "C" void app_main(void) {
     }
 
     const int64_t now = esp_timer_get_time();
-    poll_touch(now);
     if (camera_frame && frame_count % kInferenceEvery == 0) {
       run_detection(image, now);
     }
