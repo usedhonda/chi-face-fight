@@ -858,11 +858,13 @@ bool start_camera() {
     return false;
   }
   sensor_t *sensor = esp_camera_sensor_get();
+  if (sensor != nullptr) {
+    // Mirror at the sensor so preview, detection boxes and the captured
+    // portrait all share the selfie orientation, whatever the sensor.
+    sensor->set_hmirror(sensor, 1);
+  }
   if (sensor != nullptr && sensor->id.PID == OV3660_PID) {
     sensor->set_vflip(sensor, 1);
-    // Mirror at the sensor so preview, detection boxes and the captured
-    // portrait all share the selfie orientation.
-    sensor->set_hmirror(sensor, 1);
     sensor->set_brightness(sensor, 1);
   }
   camera_active = true;

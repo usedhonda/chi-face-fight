@@ -10,10 +10,10 @@ directory must be new or empty, so reruns cannot silently replace an accepted
 asset.
 
 ```sh
-python3 work/chi-camera-creature/assets/prepare_animation.py \
+python3 assets/prepare_animation.py \
   --action kick \
   --name chi-kick-v1 \
-  --output-dir work/chi-camera-creature/assets/build/chi-kick-v1 \
+  --output-dir assets/build/chi-kick-v1 \
   frame-01.png frame-02.png frame-03.png
 ```
 
@@ -27,12 +27,12 @@ For a transparent sprite sheet, provide the expected frame count instead of
 positional files:
 
 ```sh
-python3 work/chi-camera-creature/assets/prepare_animation.py \
-  --sheet-input work/chi-camera-creature/assets/game-actions-v1/chi-kick-sheet-v1.png \
+python3 assets/prepare_animation.py \
+  --sheet-input assets/game-actions-v1/chi-kick-sheet-v1.png \
   --expected-frames 6 \
   --action kick \
   --name chi-kick-sheet-v1 \
-  --output-dir work/chi-camera-creature/assets/pipeline-sheet-sample-v1
+  --output-dir assets/build/chi-kick-sheet-v1
 ```
 
 Sheet mode finds alpha-connected foreground components, keeps character-sized

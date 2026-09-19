@@ -1,6 +1,7 @@
 # Chi Face Fight
 
-A self-contained face-fighting game for the Seeed Studio XIAO ESP32S3 Sense
+A self-contained face-fighting game for an ESP32-S3 camera board and a
+240 x 280 touch LCD. The reference build uses a Seeed Studio XIAO ESP32S3 Sense
 and a Waveshare 1.69-inch ST7789V2 touch LCD.
 
 The OV3660 camera detects and captures one face locally. Camera acquisition and
@@ -64,12 +65,42 @@ The firmware uses no Wi-Fi, cloud service, or microSD storage.
 - Full rules and the state machine live in
   [docs/FACE_FIGHT_GAME.md](docs/FACE_FIGHT_GAME.md).
 
-## Hardware and wiring
+## Hardware
 
-- Seeed Studio XIAO ESP32S3 Sense with OV3660 camera and PSRAM
+### Requirements
+
+- **ESP32-S3** with at least 8 MB flash and 8 MB PSRAM. The ESP-DL face model
+  ships for ESP32-S3 (and P4); classic ESP32 and C-series chips are not
+  supported. The firmware image is about 5.8 MB.
+- **DVP camera** supported by `esp32-camera`, such as OV3660 or OV2640.
+- **240 x 280 ST7789 LCD with a CST816 touch controller**. The layout is
+  written for this resolution.
+- A microphone is not needed; the PDM microphone is initialised but unused in
+  gameplay.
+
+### Reference build
+
+- Seeed Studio XIAO ESP32S3 Sense (OV3660 camera, 8 MB octal PSRAM)
 - Waveshare 1.69-inch Touch LCD Module, 240 x 280, ST7789V2 + CST816T
-- LCD SPI: MOSI GPIO9, SCK GPIO7, CS GPIO2, DC GPIO4, RST GPIO1, BL GPIO43
-- Touch I2C: SDA GPIO5, SCL GPIO6, RST GPIO44, IRQ GPIO3
+
+| Signal | XIAO GPIO |
+|---|---|
+| LCD SPI MOSI / SCK / CS / DC / RST / BL | 9 / 7 / 2 / 4 / 1 / 43 |
+| Touch I2C SDA / SCL / RST / IRQ | 5 / 6 / 44 / 3 |
+| Camera | XIAO Sense on-board connector |
+
+### Porting to another ESP32-S3 board
+
+Only the reference build has been tested. To try another board:
+
+1. Update the pin map in `include/board_pins.h` (camera, LCD, touch).
+2. Set `board` in `platformio.ini`, and the flash size and PSRAM mode in
+   `sdkconfig.defaults` (`CONFIG_SPIRAM_MODE_OCT` is for octal PSRAM).
+3. Check the camera orientation in `start_camera()` in `main/main.cpp`. The
+   preview is mirrored on every sensor, but the vertical flip is only applied
+   to OV3660, which is how the XIAO Sense module is mounted.
+4. For a different panel, adjust `init_lcd()` (mirroring, colour inversion and
+   the 20-pixel row gap of the 1.69-inch module).
 
 ## Build
 

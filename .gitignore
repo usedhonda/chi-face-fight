@@ -5,3 +5,6 @@ sdkconfig*
 logs/
 docs/log/
 managed_components
+assets/build/
+assets/face-fight-ui/generated/
+.local/
