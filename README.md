@@ -10,7 +10,7 @@ transparent, moving opponent while Secretary Chi walks, punches, kicks, dodges,
 blocks, gets hit, and celebrates using pixel-art sprite animation.
 
 <p align="center">
-  <img src="docs/images/lock-on-v2.gif" width="320" alt="Sniper lock-on sequence after the face is captured">
+  <img src="docs/images/lock-on-v3.gif" width="320" alt="Sniper lock-on sequence after the face is captured">
 </p>
 
 ## Screenshots
@@ -34,7 +34,7 @@ blocks, gets hit, and celebrates using pixel-art sprite animation.
 
 These screenshots are rendered by the firmware's own drawing code compiled on
 the host (see [Regenerating screenshots](#regenerating-screenshots)); the
-opponent is an AI-generated fictional adult, not a real person.
+opponent is an AI-generated pixel-art adult, not a real person.
 
 ## Game flow
 
