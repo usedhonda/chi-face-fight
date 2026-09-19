@@ -1,0 +1,57 @@
+This repository contains two kinds of material under different terms.
+
+1. Source code
+
+The source code in this repository (including main/main.cpp, include/,
+tools/, assets/prepare_animation.py, and the build configuration) is licensed
+under the MIT License below, except for the artwork described in section 2 and
+the third-party components described in section 3.
+
+MIT License
+
+Copyright (c) 2026 usedhonda
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+2. Artwork and the Chi character - all rights reserved
+
+Copyright (c) 2026 usedhonda. All rights reserved.
+
+The character "Chi" (ちー), including her name, appearance, and design, and
+all artwork in this repository are not licensed under the MIT License. This
+covers:
+
+- everything under assets/ except assets/prepare_animation.py
+- the image data generated from those assets in main/chi_walk.cpp,
+  main/chi_actions.cpp, main/chi_game_actions.cpp,
+  main/chi_fighting_actions.cpp, main/ui_assets.cpp, and
+  main/arena_backgrounds.cpp
+- the screenshots and animations under docs/images/
+
+You may build and run this project for personal, non-commercial use with the
+artwork unchanged. Any other use, including redistribution of the artwork or
+the Chi character on its own, modification, or use in other projects, requires
+prior written permission from the copyright holder.
+
+3. Third-party components
+
+components/human_face_detect is from Espressif ESP-DL and is licensed under
+the MIT License; see components/human_face_detect/LICENSE. Dependencies
+downloaded at build time (such as espressif/esp32-camera) keep their own
+licenses.

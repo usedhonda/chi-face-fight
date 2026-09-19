@@ -138,3 +138,11 @@ through `tools/screenshots/host_main.cpp`, and writes `docs/images/`. It needs
 - `tools/`: reproducible UI asset generation and host screenshot rendering
 - `components/`: local ESP-DL model component
 - `docs/`: game design notes and README images
+
+## License
+
+The source code is MIT-licensed. The Chi character and all artwork (sprites,
+UI images, backgrounds, and the image data generated from them) are
+copyright usedhonda, all rights reserved; you may build and run the project
+for personal, non-commercial use. See [LICENSE](LICENSE) for the exact scope
+and third-party components.
