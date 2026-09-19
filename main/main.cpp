@@ -213,7 +213,21 @@ bool boss_body_attack = false;
 bool pending_chi_victory = false;
 CombatMotion combat_motion = CombatMotion::Home;
 int queued_attacks = 0;
+int queued_crits = 0;
 int64_t last_combat_motion_us = 0;
+bool flick_armed = false;
+int flick_x = 0;
+int flick_y = 0;
+int64_t flick_start_us = 0;
+int64_t dodge_started_us = 0;
+int64_t dodge_until_us = 0;
+int64_t last_dodge_us = 0;
+int64_t last_counter_us = 0;
+int64_t last_crit_us = 0;
+int64_t weak_until_us = 0;
+int64_t next_weak_us = 0;
+int weak_ox = 44;
+int weak_oy = 44;
 int boss_draw_x = kFaceX;
 int boss_draw_y = kFaceY;
 int64_t round_state_since_us = 0;
@@ -403,6 +417,77 @@ int64_t boss_attack_delay_us() {
   return std::max<int64_t>(750000, 2300000 - (fight_level - 1) * 180000);
 }
 
+int boss_max_hp() { return std::min(180, 100 + (fight_level - 1) * 12); }
+
+void reset_combat_extras() {
+  queued_crits = 0;
+  flick_armed = false;
+  dodge_until_us = 0;
+  weak_until_us = 0;
+  next_weak_us = 0;
+}
+
+int64_t weak_point_duration_us() {
+  return std::max<int64_t>(500000, 1100000 - fight_level * 80000);
+}
+
+// Paints inside the captured head silhouette only, in portrait coordinates.
+void face_mark(int fx, int fy, uint16_t color, uint8_t alpha) {
+  if (fx < 0 || fx >= kFaceSize || fy < 0 || fy >= kFaceSize) return;
+  if (face_alpha[fy * kFaceSize + fx] <= 128) return;
+  const int dx = boss_draw_x + fx;
+  const int dy = boss_draw_y + fy;
+  if (dx < 0 || dx >= kDisplayWidth || dy < 0 || dy >= kDisplayHeight) return;
+  set_pixel(dx, dy, blend565(color, screen[dy * kDisplayWidth + dx], alpha));
+}
+
+void face_mark_disc(int cx, int cy, int radius, uint16_t color, uint8_t alpha) {
+  for (int y = -radius; y <= radius; ++y) {
+    for (int x = -radius; x <= radius; ++x) {
+      if (x * x + y * y <= radius * radius) face_mark(cx + x, cy + y, color, alpha);
+    }
+  }
+}
+
+void face_mark_line(int x0, int y0, int x1, int y1, uint16_t color) {
+  const int steps = std::max(std::abs(x1 - x0), std::abs(y1 - y0));
+  for (int i = 0; i <= steps; ++i) {
+    const int x = x0 + (x1 - x0) * i / std::max(1, steps);
+    const int y = y0 + (y1 - y0) * i / std::max(1, steps);
+    face_mark(x, y, color, 230);
+    face_mark(x + 1, y, color, 120);
+  }
+}
+
+// Damage accumulates visibly on the player's face as the boss loses HP.
+void draw_face_damage(int64_t now) {
+  const int hp_percent = boss_hp * 100 / boss_max_hp();
+  if (hp_percent <= 70) {
+    face_mark_disc(28, 38, 10, rgb565(110, 40, 150), 110);
+    face_mark_disc(28, 38, 6, rgb565(70, 20, 110), 90);
+  }
+  if (hp_percent <= 45) {
+    const uint16_t crack = rgb565(40, 20, 20);
+    face_mark_line(62, 14, 56, 22, crack);
+    face_mark_line(56, 22, 63, 30, crack);
+    face_mark_line(63, 30, 58, 36, crack);
+    face_mark_line(18, 58, 26, 63, crack);
+    face_mark_line(26, 63, 22, 70, crack);
+    face_mark_disc(64, 56, 8, rgb565(235, 60, 60), 90);
+  }
+  if (hp_percent <= 20) {
+    const uint16_t tape = rgb565(235, 195, 150);
+    for (int i = -9; i <= 9; ++i) {
+      for (int w = -2; w <= 2; ++w) {
+        face_mark(46 + i + w, 22 + i, tape, 235);
+        face_mark(46 + i + w, 22 - i, tape, 235);
+      }
+    }
+    const int drip = static_cast<int>((now / 60000) % 14);
+    face_mark_disc(76, 24 + drip, 3, rgb565(140, 220, 255), 200);
+  }
+}
+
 
 void capture_face_candidate(const dl::image::img_t &image) {
   if (face_ready || !person_present || stable_face_frames < 1 ||
@@ -448,6 +533,7 @@ void capture_face_candidate(const dl::image::img_t &image) {
   game_action = GameAction::None;
   combat_motion = CombatMotion::Home;
   queued_attacks = 0;
+  reset_combat_extras();
   last_combat_motion_us = esp_timer_get_time();
   round_state_since_us = esp_timer_get_time();
   camera_stop_pending = true;
@@ -520,6 +606,15 @@ void draw_face_portrait(int64_t now) {
       set_pixel(dx, dy, alpha > 245 ? color
                                    : blend565(color, screen[dy * kDisplayWidth + dx], alpha));
     }
+  }
+  if (fight_state != FightState::FindFace) draw_face_damage(now);
+  if (fight_state == FightState::Fighting && now < weak_until_us) {
+    const int wx = boss_draw_x + weak_ox;
+    const int wy = boss_draw_y + weak_oy;
+    const bool bright = ((now / 80000) & 1) == 0;
+    draw_ring(wx, wy, 11, bright ? rgb565(255, 255, 255) : rgb565(255, 220, 40));
+    draw_ring(wx, wy, 8, rgb565(255, 220, 40));
+    draw_disc(wx, wy, bright ? 4 : 3, rgb565(255, 255, 255));
   }
   if (fight_state == FightState::ChiWins) {
     const uint16_t tear = rgb565(75, 205, 255);
@@ -600,9 +695,8 @@ void draw_fight_hud(int64_t now) {
     draw_centered_text(status, 13, 1, guide);
     return;
   }
-  const int boss_max_hp = std::min(180, 100 + (fight_level - 1) * 12);
   const int chi_bar = chi_hp * 44 / 100;
-  const int you_bar = boss_hp * 44 / boss_max_hp;
+  const int you_bar = boss_hp * 44 / boss_max_hp();
   fill_rect(0, 0, kDisplayWidth, 25, rgb565(12, 12, 25));
   draw_text("CHI", 28, 12, 1, rgb565(255, 255, 255));
   draw_text("YOU", 194, 12, 1, rgb565(255, 255, 255));
@@ -676,6 +770,15 @@ void draw_fight_hud(int64_t now) {
     if (fight_level < 4 || ((now / 90000) & 1) == 0) {
       draw_centered_text("HOLD!", 34, 2, rgb565(255, 65, 55));
     }
+    if (fight_level <= 2) {
+      draw_centered_text("OR FLICK CHI", 54, 1, rgb565(255, 225, 80));
+    }
+  } else if (now - last_counter_us < 500000) {
+    draw_centered_text("COUNTER!", 34, 2, rgb565(255, 225, 60));
+  } else if (now - last_crit_us < 500000) {
+    draw_centered_text("CRITICAL!", 34, 2, rgb565(255, 240, 90));
+  } else if (now - last_dodge_us < 500000) {
+    draw_centered_text("DODGE!", 34, 2, rgb565(120, 220, 255));
   } else if (guard_active) {
     draw_centered_rgba(ui_block_rgba, ui_block_width, ui_block_height, 28);
   } else if (combo > 1 && now - last_attack_us < 500000) {
@@ -1193,6 +1296,7 @@ void reset_fight() {
   game_action = GameAction::None;
   combat_motion = CombatMotion::Home;
   queued_attacks = 0;
+  reset_combat_extras();
   action = Action::Idle;
   camera_start_pending = true;
 }
@@ -1206,7 +1310,7 @@ void prepare_round(int64_t now, bool advance_level) {
   boss_body_attack = false;
   pending_chi_victory = false;
   chi_hp = 100;
-  boss_hp = std::min(180, 100 + (fight_level - 1) * 12);
+  boss_hp = boss_max_hp();
   combo = 0;
   chi_hit_count = 0;
   guard_active = false;
@@ -1216,6 +1320,7 @@ void prepare_round(int64_t now, bool advance_level) {
   game_action = GameAction::None;
   combat_motion = CombatMotion::Home;
   queued_attacks = 0;
+  reset_combat_extras();
   last_combat_motion_us = now;
   round_state_since_us = now;
   ESP_LOGI(TAG, "FIGHT_EVENT type=ROUND_PREP level=%d boss_hp=%d",
@@ -1298,7 +1403,35 @@ bool update_fight(int64_t now, bool got_touch, bool got_sound, int x, int y) {
 
   if (pending_chi_victory) return true;
 
-  guard_active = combat_motion == CombatMotion::Home && held &&
+  // A quick drag that starts on Chi becomes a dodge: up jumps, any other
+  // direction side-steps. It is decided before guard so the drag wins.
+  const bool can_evade = combat_motion == CombatMotion::Home &&
+      (game_action == GameAction::None || game_action == GameAction::Block);
+  if (got_touch && can_evade && touch_hits_character(x, y)) {
+    flick_armed = true;
+    flick_x = x;
+    flick_y = y;
+    flick_start_us = now;
+  }
+  if (flick_armed && (!held || !can_evade || now - flick_start_us > 300000)) {
+    flick_armed = false;
+  }
+  if (flick_armed) {
+    const int dx = held_x - flick_x;
+    const int dy = held_y - flick_y;
+    if (dx * dx + dy * dy >= 28 * 28) {
+      flick_armed = false;
+      const bool jump = dy < 0 && -dy >= std::abs(dx);
+      start_game_action(jump ? GameAction::Jump : GameAction::Dodge, now);
+      dodge_started_us = now;
+      dodge_until_us = now + (jump ? 450000 : 380000);
+      ESP_LOGI(TAG, "FIGHT_EVENT type=EVADE move=%s", jump ? "jump" : "dodge");
+    }
+  }
+  const bool evading = game_action == GameAction::Dodge ||
+                       game_action == GameAction::Jump;
+
+  guard_active = !evading && combat_motion == CombatMotion::Home && held &&
                  touch_hits_character(held_x, held_y);
   if (guard_active) {
     if (game_action != GameAction::Block) start_game_action(GameAction::Block, now);
@@ -1308,8 +1441,24 @@ bool update_fight(int64_t now, bool got_touch, bool got_sound, int x, int y) {
   }
 
   if (combo > 0 && now - last_attack_us > kComboTimeoutUs) combo = 0;
-  if (got_touch && touch_hits_face(x, y) && !guard_active) {
+  if (fight_state == FightState::Fighting && next_weak_us == 0) {
+    next_weak_us = now + 2000000 + esp_random() % 2000000;
+  } else if (fight_state == FightState::Fighting && now >= next_weak_us) {
+    weak_ox = 20 + static_cast<int>(esp_random() % 49);
+    weak_oy = 20 + static_cast<int>(esp_random() % 49);
+    weak_until_us = now + weak_point_duration_us();
+    next_weak_us = weak_until_us + 2000000 + esp_random() % 2000000;
+  }
+  if (got_touch && touch_hits_face(x, y) && !guard_active && !evading) {
     queued_attacks = std::min(4, queued_attacks + 1);
+    const int wdx = x - (boss_draw_x + weak_ox);
+    const int wdy = y - (boss_draw_y + weak_oy);
+    if (now < weak_until_us && wdx * wdx + wdy * wdy <= 16 * 16) {
+      weak_until_us = 0;
+      queued_crits = std::min(queued_attacks, queued_crits + 1);
+      ESP_LOGI(TAG, "FIGHT_EVENT type=WEAK_POINT_HIT queued_crits=%d",
+               queued_crits);
+    }
   }
 
   auto move_toward = [&](float destination_x, float destination_y, float speed) {
@@ -1327,7 +1476,8 @@ bool update_fight(int64_t now, bool got_touch, bool got_sound, int x, int y) {
     return false;
   };
 
-  if (combat_motion == CombatMotion::Home && queued_attacks > 0 && !guard_active) {
+  if (combat_motion == CombatMotion::Home && queued_attacks > 0 && !guard_active &&
+      !evading) {
     combat_motion = CombatMotion::Approach;
     moving = true;
     direction = Direction::Right;
@@ -1347,13 +1497,20 @@ bool update_fight(int64_t now, bool got_touch, bool got_sound, int x, int y) {
       ++chi_hit_count;
       last_attack_us = now;
       const bool heavy = chi_hit_count % 3 == 0;
-      boss_hp = std::max(0, boss_hp - (heavy ? 12 : 7));
+      const bool crit = queued_crits > 0;
+      if (crit) {
+        --queued_crits;
+        last_crit_us = now;
+      }
+      const int base_damage = heavy ? 12 : 7;
+      const int damage = crit ? base_damage * 2 + 2 : base_damage;
+      boss_hp = std::max(0, boss_hp - damage);
       start_game_action(heavy ? GameAction::Kick : GameAction::PunchCombo, now);
       ESP_LOGI(TAG,
-               "FIGHT_EVENT type=CHI_HIT level=%d attack=%s damage=%d "
+               "FIGHT_EVENT type=CHI_HIT level=%d attack=%s%s damage=%d "
                "boss_hp=%d queued=%d",
-               fight_level, heavy ? "kick" : "punch", heavy ? 12 : 7,
-               boss_hp, queued_attacks);
+               fight_level, crit ? "crit_" : "", heavy ? "kick" : "punch",
+               damage, boss_hp, queued_attacks);
       if (boss_hp == 0) {
         pending_chi_victory = true;
         queued_attacks = 0;
@@ -1398,13 +1555,25 @@ bool update_fight(int64_t now, bool got_touch, bool got_sound, int x, int y) {
   } else if (boss_state == BossState::Strike &&
              now - boss_state_since_us >= 420000) {
     const bool body_hit = boss_body_attack;
+    boss_state = BossState::Idle;
+    boss_body_attack = false;
+    next_boss_attack_us = now + boss_attack_delay_us() + esp_random() % 500000;
+    if (now < dodge_until_us) {
+      const bool just = now - dodge_started_us <= 220000;
+      last_dodge_us = now;
+      if (just) {
+        last_counter_us = now;
+        queued_attacks = std::min(4, queued_attacks + 1);
+        queued_crits = std::min(queued_attacks, queued_crits + 1);
+      }
+      ESP_LOGI(TAG, "FIGHT_EVENT type=%s move=%s damage=0 chi_hp=%d",
+               just ? "COUNTER" : "DODGE", body_hit ? "body" : "orb", chi_hp);
+      return true;
+    }
     const int damage = guard_active ? (body_hit ? 4 : 2)
                                     : (body_hit ? 18 : 14);
     chi_hp = std::max(0, chi_hp - damage);
     last_boss_attack_us = now;
-    boss_state = BossState::Idle;
-    boss_body_attack = false;
-    next_boss_attack_us = now + boss_attack_delay_us() + esp_random() % 500000;
     if (!guard_active) {
       combat_motion = CombatMotion::Attack;
       start_game_action(GameAction::Hit, now);

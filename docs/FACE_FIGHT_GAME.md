@@ -28,17 +28,23 @@ the face to make Chi attack, and press and hold Chi to guard incoming attacks.
 - Repeated taps inside the face portrait: one attack per distinct press.
 - Press and hold inside Chi: guard remains active only while the touch remains
   down and within Chi's hit area.
-- Sound peak while the special meter is full: roundhouse special.
+- Flick starting on Chi (28 px within 300 ms): upward jumps, any other
+  direction side-steps. Dodging is invulnerable for 380 ms (jump 450 ms).
 - Touches outside the face and Chi have no combat effect.
 
 ## Combat rules
 
-- Punch: 7 damage. Every fifth valid face tap uses kick for 12 damage.
+- Punch: 7 damage. Every third landed attack is a kick for 12 damage.
 - Combo expires after 1.2 seconds without a valid face tap.
 - Boss warning lasts 750 ms and is deliberately visible before impact.
 - Unblocked boss hit: 14 damage. Blocked hit: 2 chip damage.
 - Boss attack interval becomes shorter below 50 HP.
-- Attacks and guard are mutually exclusive.
+- Attacks, guard and dodge are mutually exclusive.
+- Weak point: a glowing ring appears on the face every 2-4 s. Tapping within
+  16 px makes the next hit critical (damage x2 + 2).
+- Dodging within 220 ms of impact is a just dodge: Chi counter-attacks with a
+  critical hit.
+- The face shows a bruise at 70% HP, cracks at 45%, and a bandage at 20%.
 
 ## State machine
 
