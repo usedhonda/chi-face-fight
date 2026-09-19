@@ -1,4 +1,4 @@
-# Chi Face Fight
+# Face Fight
 
 A self-contained face-fighting game for an ESP32-S3 camera board and a
 240 x 280 touch LCD. The reference build uses a Seeed Studio XIAO ESP32S3 Sense
@@ -10,22 +10,31 @@ transparent, moving opponent while Secretary Chi walks, punches, kicks, dodges,
 blocks, gets hit, and celebrates using pixel-art sprite animation.
 
 <p align="center">
-  <img src="docs/images/lock-on.gif" width="240" alt="Sniper lock-on sequence after the face is captured">
+  <img src="docs/images/lock-on.gif" width="320" alt="Sniper lock-on sequence after the face is captured">
 </p>
 
 ## Screenshots
 
-| Find face | Lock on | Intro | Attack | Warning |
-|:-:|:-:|:-:|:-:|:-:|
-| <img src="docs/images/01-find-face.png" width="150"> | <img src="docs/images/02-lock-on.png" width="150"> | <img src="docs/images/03-intro.png" width="150"> | <img src="docs/images/04-attack.png" width="150"> | <img src="docs/images/05-warning.png" width="150"> |
+| Find a face | Fight | Flick dodge |
+|:-:|:-:|:-:|
+| <img src="docs/images/01-find-face.png" width="220" alt="Face detection on the camera preview"> | <img src="docs/images/04-attack.png" width="220" alt="Chi landing a combo attack"> | <img src="docs/images/06-flick-jump.png" width="220" alt="Chi dodging an incoming attack"> |
 
-| Flick dodge | Weak point | Critical | Chi wins | Face wins |
-|:-:|:-:|:-:|:-:|:-:|
-| <img src="docs/images/06-flick-jump.png" width="150"> | <img src="docs/images/07-weak-point.png" width="150"> | <img src="docs/images/08-critical.png" width="150"> | <img src="docs/images/09-chi-wins.png" width="150"> | <img src="docs/images/10-face-wins.png" width="150"> |
+<details>
+<summary>More game states</summary>
+
+| Lock on | Intro | Warning | Weak point |
+|:-:|:-:|:-:|:-:|
+| <img src="docs/images/02-lock-on.png" width="170" alt="Target lock-on view"> | <img src="docs/images/03-intro.png" width="170" alt="Face Fight intro"> | <img src="docs/images/05-warning.png" width="170" alt="Incoming attack warning"> | <img src="docs/images/07-weak-point.png" width="170" alt="Glowing weak point on the opponent"> |
+
+| Critical | Chi wins | Face wins |
+|:-:|:-:|:-:|
+| <img src="docs/images/08-critical.png" width="220" alt="Critical attack effect"> | <img src="docs/images/09-chi-wins.png" width="220" alt="Chi wins the round"> | <img src="docs/images/10-face-wins.png" width="220" alt="The face wins the round"> |
+
+</details>
 
 These screenshots are rendered by the firmware's own drawing code compiled on
 the host (see [Regenerating screenshots](#regenerating-screenshots)); the
-opponent is a synthetic cartoon face, not a real person.
+opponent is an AI-generated fictional adult, not a real person.
 
 ## Game flow
 

@@ -129,11 +129,11 @@ int main(int argc, char **argv) {
   std::fclose(file);
   camera_image = {camera_rgb, kCameraWidth, kCameraHeight};
 
-  // Face box of the synthetic player in camera coordinates (see render_screens.py).
+  // Face box of the fictional player in camera coordinates (see render_screens.py).
   person_present = true;
-  person_box[0] = 150;
-  person_box[1] = 62;
-  person_box[2] = 230;
+  person_box[0] = 142;
+  person_box[1] = 45;
+  person_box[2] = 232;
   person_box[3] = 150;
   stable_face_frames = 3;
 
