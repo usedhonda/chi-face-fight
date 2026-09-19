@@ -4,7 +4,7 @@ A self-contained face-fighting game for an ESP32-S3 camera board and a
 240 x 280 touch LCD. The reference build uses a Seeed Studio XIAO ESP32S3 Sense
 and a Waveshare 1.69-inch ST7789V2 touch LCD.
 
-The OV3660 camera detects and captures one face locally. Camera acquisition and
+The camera detects and captures one face locally. Camera acquisition and
 face inference then stop for the entire fight. The captured face becomes a
 transparent, moving opponent while Secretary Chi walks, punches, kicks, dodges,
 blocks, gets hit, and celebrates using pixel-art sprite animation.
